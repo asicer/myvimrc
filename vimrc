@@ -1,21 +1,26 @@
-set nowrap
 set number
+set nowrap
 set mouse-=a
 set nobackup
 set hlsearch
 set wildmenu
 set incsearch
 set ignorecase
+set noswapfile
+set tabstop=4
+set expandtab
+set shiftwidth=4
+set softtabstop=4
 set matchtime=2
 set nofoldenable
 set encoding=UTF-8
+set relativenumber
 set foldmethod=syntax
 set clipboard=unnamed
 
-set tabstop=4
-set noexpandtab
-set shiftwidth=4
-set softtabstop=4
+let &t_SI.="\e[4 q" "SI = INSERT mode
+let &t_SR.="\e[4 q" "SR = REPLACE mode
+let &t_EI.="\e[4 q" "EI = NORMAL mode (ELSE)
 
 syntax on
 let mapleader=','
@@ -27,11 +32,10 @@ nnoremap <c-l> <c-w>l
 
 nnoremap <leader>h :tab previous<cr>
 
-set rtp+=~/.fzf
-
 map <leader>r :NERDTreeFind<cr>
 map <leader>nn :NERDTreeToggle<cr>
 
+nmap <leader>q :qa<cr>
 nmap <leader>h :bp<cr>
 nmap <leader>l :bn<cr>
 
@@ -41,73 +45,40 @@ let g:webdevicons_enable_ctrlp = 1
 let g:webdevicons_conceal_nerdtree_brackets = 1
 let g:ycm_autoclose_preview_window_after_completion = 1
 
-" after a re-source, fix syntax matching issues (concealing brackets):
-if exists('g:loaded_webdevicons')
-    call webdevicons#refresh()
-endif
-
-let g:ackprg = "ag --vimgrep"
-nnoremap <leader><leader> :silent GrepperAg <C-R>=expand("<cword>")<CR> %<CR>
-
 " Nerdtree settings
 let g:NERDTreeWinPos = 'right'
 let g:NERDTreeShowBookmarks = 1
 let g:NERDTreeShowLineNumbers = 1
 let g:NERDTreeHighlightCursorline = 0
-let g:NERDTreeDirArrowExpandable = ' '
-let g:NERDTreeDirArrowCollapsible = ' '
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
 let g:NERDTreeIgnore=['\.pyc','\.swp']
 
-autocmd VimEnter * silent colorscheme evening
+let g:tagbar_left=1
+let g:tagbar_ctags_bin='/opt/brew/bin/ctags'
+
+let g:git_messenger_floating_win_opts = { 'border': 'single' }
+let g:git_messenger_popup_content_margins = v:false
+
 autocmd VimEnter * silent NERDTree | wincmd p
-" autocmd BufWinEnter * silent NERDTreeMirror
 autocmd BufEnter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 autocmd BufWritePost *.vimrc silent! source %
 
-" PEP8 check
-" autocmd BufWritePost *.py call Flake8()
-
 " Build system
-autocmd filetype python nnoremap <leader>x :w <bar> exec '!clear && python '.shellescape('%')<CR>
+autocmd filetype python nnoremap <leader>x :w <bar> exec '!clear && python3 '.shellescape('%')<CR>
 autocmd filetype c nnoremap <leader>x :w <bar> exec '!clear && gcc '.shellescape('%').' -o /tmp/'.shellescape('%:r').' && /tmp/'.shellescape('%:r')<CR>
 autocmd filetype cpp nnoremap <leader>x :w <bar> exec '!g++ '.shellescape('%').' -o /tmp/'.shellescape('%:r').' && /tmp/'.shellescape('%:r')<CR>
-
-colorscheme evening
 
 nnoremap <c-c> :CtrlPMRU<cr>
 
 nnoremap <c-n> :nohl<cr>
-nnoremap <c-m> :call halo#run({'shape': 'line'})<cr>
-" nnoremap <leader>p :<C-u>Denite colorscheme -auto-action=preview<cr>
-
-vmap " S"
-vmap ' S'
-vmap ` S`
-vmap [ S[
-vmap ( S(
-vmap { S{
-vmap } S}
-vmap ] S]
-vmap ) S)
-vmap > S>
-
-let g:EasyMotion_do_mapping = 0 " Disable default mappings
-
-" `s{char}{char}{label}`
-" Need one more keystroke, but on average, it may be more comfortable.
-nmap s <Plug>(easymotion-fn)
-nmap f <Plug>(easymotion-overwin-f2)
-nmap t <Plug>(easymotion-overwin-line)
-
-" Turn on case-insensitive feature
-let g:EasyMotion_smartcase = 1
+autocmd BufEnter * call halo#run()
 
 nnoremap <Leader>b :<C-u>call gitblame#echo()<CR>
 
-" Airline settings
-
 " Cscope settings
+set csprg=/usr/local/bin/cscope
 cs add /Volumes/Diags/Tools/cscope/cscope.out
 
 nmap <Leader>s :cs find s <C-R>=expand("<cword>")<CR><CR>
@@ -119,70 +90,45 @@ nmap <Leader>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
 nmap <Leader>i :cs find i <C-R>=expand("<cfile>")<CR><CR>
 nmap <Leader>d :cs find d <C-R>=expand("<cword>")<CR><CR>
 
-let g:Tlist_Ctags_Cmd = '/usr/local/Cellar/ctags/5.8_1/bin/ctags'
-nmap <leader>a :TlistToggle<cr>
+nmap <leader>a :TagbarToggle<cr>
 
-set nocompatible              " be iMproved, required
-filetype off                  " required
+nmap s <Plug>(easymotion-fn)
+nmap f <Plug>(easymotion-overwin-f2)
+nmap t <Plug>(easymotion-overwin-line)
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
 
-call vundle#begin()
-" alternatively, pass a path where Vundle should install plugins
-" call vundle#begin('~/some/path/here')
+call plug#begin()
+Plug 'vim-voom/VOoM'
+Plug 'mhinz/vim-halo'
+Plug 'vimwiki/vimwiki'
+Plug 'preservim/tagbar'
+Plug 'ap/vim-buftabline'
+Plug 'preservim/nerdtree'
+Plug 'tpope/vim-rhubarb'
+Plug 'tpope/vim-fugitive'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'mhinz/vim-startify'
+Plug 'Yggdroot/indentLine'
+Plug 'jiangmiao/auto-pairs'
+Plug 'charz/multi-cscope-db'
+Plug 'rbgrouleff/bclose.vim'
+Plug 'google/vim-searchindex'
+Plug 'flazz/vim-colorschemes'
+Plug 'zivyangll/git-blame.vim'
+Plug 'rhysd/git-messenger.vim'
+Plug 'easymotion/vim-easymotion'
+Plug 'dhruvasagar/vim-table-mode'
+Plug 'iamcco/markdown-preview.vim'
+Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown'}
+call plug#end()
 
-Plugin 'mhinz/vim-halo'
-Plugin 'mhinz/vim-grepper'
-Plugin 'ap/vim-buftabline'
-Plugin 'mhinz/vim-startify'
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'preservim/nerdtree'
-Plugin 'Yggdroot/indentLine'
-Plugin 'jiangmiao/auto-pairs'
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'charz/multi-cscope-db'
-Plugin 'rbgrouleff/bclose.vim'
-Plugin 'google/vim-searchindex'
-Plugin 'flazz/vim-colorschemes'
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'zivyangll/git-blame.vim'
-Plugin 'easymotion/vim-easymotion'
-
-Plugin 'ryanoasis/vim-devicons'
-
-"Plugin 'scrooloose/nerdcommenter'
-"Plugin 'Xuyuanp/nerdtree-git-plugin'
-"Plugin 'vim-scripts/taglist.vim'
-"Plugin 'mileszs/ack.vim'
-"Plugin 'ervandew/supertab'
-"Plugin 'tpope/vim-surround'
-"Plugin 'airblade/vim-gitgutter'
-"Plugin 'roxma/nvim-yarp'
-"Plugin 'Shougo/denite.nvim'
-"Plugin 'roxma/vim-hug-neovim-rpc'
-"Plugin 'rhysd/git-messenger.vim'
-"Plugin 'vim-airline/vim-airline'
-"Plugin 'vim-airline/vim-airline-themes'
-"Plugin 'suan/vim-instant-markdown', {'rtp': 'after'}
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
-
-" call denite#custom#option('default', 'auto_action', 'preview')
-
-" Random colorscheme
-function RandomColorScheme()
-  let mycolors = split(globpath(&rtp,"**/colors/*.vim"),"\n")
-  exe 'so ' . mycolors[localtime() % len(mycolors)]
-  unlet mycolors
-endfunction
-
-" call RandomColorScheme()
-
-:command NewColor call RandomColorScheme()
-nmap <leader>n :NewColor<cr>
+colorscheme evening
+hi Normal ctermfg=249 ctermbg=234 guifg=#bbbbbb guibg=#252525
 
 function SwitchBackground()
 	if stridx(execute("hi Normal"), "guibg") != -1
@@ -193,5 +139,6 @@ function SwitchBackground()
 	echom("4")
 endfunction
 
+let &t_ut=''
 :command NewBg call SwitchBackground()
 nnoremap <leader><space> :NewBg<CR>
